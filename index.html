@@ -2,120 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>K-ImageComp - Smart Image Compressor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: sans-serif; margin: 2em; background: #f0f2f5; color: #333; }
-    h1 { text-align: center; }
-    #drop-area {
-      border: 2px dashed #bbb;
-      border-radius: 10px;
-      padding: 30px;
-      background: white;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .controls { margin-top: 20px; }
-    .images-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
-    .image-preview { border: 1px solid #ccc; padding: 10px; background: white; }
-    canvas { display: none; }
-    .btn { margin-top: 10px; padding: 10px 20px; cursor: pointer; }
-    .hidden { display: none; }
-  </style>
+  <title>ClipCompress - Image Compressor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
 </head>
 <body>
-
-<h1>📷 K-ImageComp</h1>
-
-<div id="drop-area">
-  <p>📥 Drag & Drop images here or <input type="file" id="fileInput" multiple></p>
-  <p>📋 Or paste an image from clipboard (Ctrl+V)</p>
-  <div class="controls">
-    <label>Quality: <span id="qualityVal">0.7</span></label>
-    <input type="range" id="qualityRange" min="0.1" max="1" step="0.1" value="0.7">
-    <button class="btn" onclick="downloadAll()">Download All</button>
-    <button class="btn" onclick="clearAll()">Clear All</button>
-  </div>
-</div>
-
-<div class="images-container" id="preview"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
-<script>
-  const dropArea = document.getElementById('drop-area');
-  const fileInput = document.getElementById('fileInput');
-  const preview = document.getElementById('preview');
-  const qualityRange = document.getElementById('qualityRange');
-  const qualityVal = document.getElementById('qualityVal');
-  let compressedImages = [];
-
-  qualityRange.oninput = () => qualityVal.textContent = qualityRange.value;
-
-  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
-  dropArea.addEventListener('dragover', e => e.preventDefault());
-  dropArea.addEventListener('drop', e => {
-    e.preventDefault();
-    handleFiles(e.dataTransfer.files);
-  });
-
-  document.addEventListener('paste', async (e) => {
-    const items = e.clipboardData.items;
-    for (let item of items) {
-      if (item.type.includes("image")) {
-        const file = item.getAsFile();
-        handleFiles([file]);
-      }
-    }
-  });
-
-  async function handleFiles(files) {
-    for (let file of files) {
-      if (!file.type.startsWith("image/")) continue;
-
-      const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-        initialQuality: parseFloat(qualityRange.value)
-      };
-
-      try {
-        const compressedFile = await imageCompression(file, options);
-        compressedImages.push({ file: compressedFile, name: file.name });
-
-        const originalSize = (file.size / 1024).toFixed(1);
-        const newSize = (compressedFile.size / 1024).toFixed(1);
-
-        const imgURL = URL.createObjectURL(compressedFile);
-        const div = document.createElement("div");
-        div.className = "image-preview";
-        div.innerHTML = `
-          <p><strong>${file.name}</strong> ➜ <em>${file.name.replace(/\.(\w+)$/, '-Comp.$1')}</em></p>
-          <p>${originalSize} KB ➜ ${newSize} KB</p>
-          <img src="${imgURL}" width="200">
-          <br><a href="${imgURL}" download="${file.name.replace(/\.(\w+)$/, '-Comp.$1')}">Download</a>
-        `;
-        preview.appendChild(div);
-      } catch (err) {
-        console.error("Compression error:", err);
-      }
-    }
+  <h1>ClipCompress</h1>
+  <input type="file" id="upload" accept="image/*" multiple>
+  <div id="dropzone">Drop or Paste Images Here</div>
+  <label for="quality">Quality</label>
+  <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8">
+  <button id="downloadAll">Download All</button>
+  <div id="output"></div>
+  <script src="app.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(() => console.log('Service Worker Registered'));
   }
-
-  function downloadAll() {
-    compressedImages.forEach(({ file, name }) => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(file);
-      a.download = name.replace(/\.(\w+)$/, '-Comp.$1');
-      a.click();
-    });
-  }
-
-  function clearAll() {
-    preview.innerHTML = "";
-    compressedImages = [];
-  }
-</script>
-
+  </script>
 </body>
 </html>
