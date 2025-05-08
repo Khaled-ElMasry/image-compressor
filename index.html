@@ -1,178 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>K-ImageCompressor</title>
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            background-color: #121212;
-            color: #f0f0f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 600px;
-            width: 100%;
-            background: #1f1f1f;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-        .drop-zone {
-            border: 2px dashed #555;
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            transition: background 0.3s;
-        }
-        .drop-zone.dragover { background: #2c2c2c; }
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        label {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.9rem;
-        }
-        button {
-            padding: 10px;
-            width: 100%;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .preview {
-            max-width: 100%;
-            display: block;
-            margin: 1rem auto;
-        }
-        .info {
-            text-align: center;
-            color: #aaa;
-            font-size: 0.85rem;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="K-Comp: A modern, offline-ready image compressor for web and mobile">
+  <title>K-Comp – Offline Image Compressor</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
+  <style>
+    :root {
+      --bg: #1e1e1e;
+      --panel: #2a2a2a;
+      --text: #ffffff;
+      --accent: #4caf50;
+      --hover: #333;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 30px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card {
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      width: 100%;
+      max-width: 650px;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    input, select, button {
+      margin: 8px;
+      padding: 6px 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #66bb6a;
+    }
+    .drop-zone {
+      border: 2px dashed #777;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 10px 0;
+      cursor: pointer;
+    }
+    .drop-zone.dragover {
+      background-color: var(--hover);
+    }
+    .preview {
+      margin-top: 15px;
+      max-width: 100%;
+    }
+    .info {
+      margin-top: 10px;
+      color: #ccc;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Khaled's ImageCompressor</h1>
-        <div class="drop-zone" id="dropZone">Click or drop an image here</div>
-        <input type="file" id="imgInput" accept="image/*" hidden>
-        <div class="controls">
-            <label>
-                Resize Width
-                <input type="number" id="resizeWidth" value="1000">
-            </label>
-            <label>
-                Format
-                <select id="format">
-                    <option value="image/jpeg">JPEG</option>
-                    <option value="image/png">PNG</option>
-                    <option value="image/webp">WebP</option>
-                </select>
-            </label>
-            <label>
-                Quality
-                <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.6">
-                <span id="qVal">60%</span>
-            </label>
-            <div></div>
-        </div>
-        <button id="compressBtn">🗜️ Compress & Download</button>
-        <div class="info" id="info"></div>
-        <img id="preview" class="preview" style="display:none;">
+  <div class="card">
+    <h1>K-Comp</h1>
+    <p>Drag an image below or click to upload. Compresses securely, offline, instantly.</p>
+    <div class="drop-zone" id="dropZone">Drop images here or click to upload</div>
+    <input type="file" id="imgInput" accept="image/*" style="display:none;">
+    <div>
+      <label>Resize Width:
+        <input type="number" id="resizeWidth" value="1000" min="100" max="8000">
+      </label>
     </div>
+    <div>
+      <label>Format:
+        <select id="format">
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </label>
+    </div>
+    <div>
+      <label>Quality:
+        <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.6">
+        <span id="qVal">60%</span>
+      </label>
+    </div>
+    <button id="compressBtn">🗜️ Compress & Download</button>
+    <div class="info" id="info"></div>
+    <img id="preview" class="preview" style="display:none;">
+  </div>
 
-    <script>
-        const dropZone = document.getElementById('dropZone');
-        const input = document.getElementById('imgInput');
-        const resizeInput = document.getElementById('resizeWidth');
-        const formatSelect = document.getElementById('format');
-        const qualitySlider = document.getElementById('quality');
-        const qVal = document.getElementById('qVal');
-        const compressBtn = document.getElementById('compressBtn');
-        const preview = document.getElementById('preview');
-        const info = document.getElementById('info');
+  <script>
+    const input = document.getElementById('imgInput');
+    const dropZone = document.getElementById('dropZone');
+    const resizeInput = document.getElementById('resizeWidth');
+    const formatSelect = document.getElementById('format');
+    const qualitySlider = document.getElementById('quality');
+    const qVal = document.getElementById('qVal');
+    const compressBtn = document.getElementById('compressBtn');
+    const preview = document.getElementById('preview');
+    const info = document.getElementById('info');
 
-        let originalImg = new Image();
+    let originalImg = new Image();
+    let currentFilename = "image";
 
-        qualitySlider.addEventListener('input', () => {
-            qVal.textContent = `${Math.round(qualitySlider.value * 100)}%`;
+    qualitySlider.addEventListener('input', () => {
+      qVal.textContent = `${Math.round(qualitySlider.value * 100)}%`;
+    });
+
+    dropZone.addEventListener('click', () => input.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleImageFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    input.addEventListener('change', () => {
+      if (input.files.length) {
+        handleImageFile(input.files[0]);
+      }
+    });
+
+    function handleImageFile(file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        originalImg.src = e.target.result;
+        currentFilename = file.name.replace(/\.[^/.]+$/, "");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    compressBtn.addEventListener('click', () => {
+      if (!originalImg.src) return;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const targetWidth = parseInt(resizeInput.value);
+      const ratio = targetWidth / originalImg.naturalWidth;
+      const targetHeight = originalImg.naturalHeight * ratio;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      ctx.drawImage(originalImg, 0, 0, targetWidth, targetHeight);
+
+      const format = formatSelect.value;
+      const quality = parseFloat(qualitySlider.value);
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        preview.src = url;
+        preview.style.display = 'block';
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${currentFilename}-Comp.${format.split('/')[1]}`;
+        link.click();
+
+        blob.arrayBuffer().then(buffer => {
+          const originalSize = atob(originalImg.src.split(',')[1] || '').length;
+          const compressedSize = buffer.byteLength;
+          const saved = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+          info.textContent = `Saved ${(originalSize - compressedSize) / 1024 | 0} KB (${saved}%)`;
         });
-
-        dropZone.addEventListener('click', () => input.click());
-
-        dropZone.addEventListener('dragover', e => {
-            e.preventDefault();
-            dropZone.classList.add('dragover');
-        });
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', e => {
-            e.preventDefault();
-            dropZone.classList.remove('dragover');
-            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-        });
-        input.addEventListener('change', () => {
-            if (input.files.length) handleFile(input.files[0]);
-        });
-
-        function handleFile(file) {
-            const reader = new FileReader();
-            reader.onload = e => originalImg.src = e.target.result;
-            reader.readAsDataURL(file);
-        }
-
-        compressBtn.addEventListener('click', () => {
-            if (!originalImg.src) return;
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const width = parseInt(resizeInput.value);
-            const ratio = width / originalImg.naturalWidth;
-            const height = originalImg.naturalHeight * ratio;
-
-            canvas.width = width;
-            canvas.height = height;
-            ctx.drawImage(originalImg, 0, 0, width, height);
-
-            const format = formatSelect.value;
-            const quality = parseFloat(qualitySlider.value);
-
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
-                preview.src = url;
-                preview.style.display = 'block';
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `compressed.${format.split('/')[1]}`;
-                link.click();
-
-                blob.arrayBuffer().then(buf => {
-                    const compSize = buf.byteLength;
-                    const origSize = atob(originalImg.src.split(',')[1]).length;
-                    const saved = ((origSize - compSize) / origSize * 100).toFixed(1);
-                    info.textContent = `Saved ${(origSize - compSize) / 1024 | 0} KB (${saved}%)`;
-                });
-            }, format, quality);
-        });
-    </script>
+      }, format, quality);
+    });
+  </script>
 </body>
 </html>
