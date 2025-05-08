@@ -3,125 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="K-Comp: Caesium-like image compressor in your browser, with paste and drag support">
-  <title>K-Comp – Caesium-Style Image Compressor</title>
+  <title>K-Comp Pro – Professional Image Compressor</title>
+  <meta name="description" content="A high-performance, offline-capable image compressor inspired by Caesium.">
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
   <style>
     :root {
-      --bg: #1e1e1e;
-      --panel: #2a2a2a;
-      --text: #ffffff;
+      --bg-color: #121212;
+      --card-bg: #1e1e1e;
       --accent: #4caf50;
-      --hover: #333;
+      --text-color: #ffffff;
+      --subtle: #aaaaaa;
+      --radius: 8px;
     }
+
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', Roboto, sans-serif;
       margin: 0;
-      padding: 30px 10px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .card {
-      background: var(--panel);
+      justify-content: center;
+      align-items: start;
+      min-height: 100vh;
       padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-      width: 100%;
-      max-width: 650px;
-      text-align: center;
     }
+
+    .container {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      max-width: 720px;
+      width: 100%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
     h1 {
       margin-top: 0;
+      font-size: 1.8rem;
     }
-    input, select, button {
-      margin: 8px;
-      padding: 6px 10px;
-      border-radius: 5px;
+
+    .controls label {
+      display: block;
+      margin: 10px 0 4px;
+      color: var(--subtle);
+    }
+
+    input[type="number"], select, input[type="range"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: var(--radius);
       border: none;
+      margin-bottom: 10px;
     }
-    button {
-      background: var(--accent);
-      color: #fff;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #66bb6a;
-    }
+
     .drop-zone {
-      border: 2px dashed #777;
-      border-radius: 10px;
-      padding: 20px;
-      margin: 10px 0;
+      border: 2px dashed #555;
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      color: var(--subtle);
+      margin-bottom: 20px;
       cursor: pointer;
     }
+
     .drop-zone.dragover {
-      background-color: var(--hover);
+      background-color: #222;
     }
+
     .preview {
-      margin-top: 15px;
+      margin-top: 20px;
       max-width: 100%;
+      display: none;
     }
+
     .info {
+      font-size: 0.9em;
+      color: var(--subtle);
       margin-top: 10px;
-      color: #ccc;
+    }
+
+    .btn {
+      background-color: var(--accent);
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background-color: #66bb6a;
     }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>K-Comp</h1>
-    <p>Drop, upload, or paste an image below. Compress securely, offline, instantly.</p>
-    <div class="drop-zone" id="dropZone">Drop images here, paste from clipboard, or click to upload</div>
-    <input type="file" id="imgInput" accept="image/*" style="display:none;">
-    <div>
-      <label>Resize Width:
-        <input type="number" id="resizeWidth" value="1000" min="100" max="8000">
-      </label>
+  <main class="container" role="main">
+    <h1>K-Comp Pro</h1>
+    <p>Paste (Ctrl+V), drop, or upload images to compress locally. No upload, no tracking.</p>
+    <div class="drop-zone" id="dropZone">Click or drop image here</div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+    <div class="controls">
+      <label for="resizeWidth">Resize Width (px):</label>
+      <input type="number" id="resizeWidth" min="50" max="8000" value="1000">
+
+      <label for="format">Output Format:</label>
+      <select id="format">
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp">WebP</option>
+      </select>
+
+      <label for="quality">Compression Quality:</label>
+      <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.7">
+      <span id="qLabel">70%</span>
     </div>
-    <div>
-      <label>Format:
-        <select id="format">
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/png">PNG</option>
-          <option value="image/webp">WebP</option>
-        </select>
-      </label>
-    </div>
-    <div>
-      <label>Quality:
-        <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.6">
-        <span id="qVal">60%</span>
-      </label>
-    </div>
-    <button id="compressBtn">🗜️ Compress & Download</button>
+    <button class="btn" id="compressBtn">Compress & Download</button>
     <div class="info" id="info"></div>
-    <img id="preview" class="preview" style="display:none;">
-  </div>
+    <img class="preview" id="preview" alt="Compressed Preview">
+  </main>
 
   <script>
-    const input = document.getElementById('imgInput');
+    const fileInput = document.getElementById('fileInput');
     const dropZone = document.getElementById('dropZone');
-    const resizeInput = document.getElementById('resizeWidth');
-    const formatSelect = document.getElementById('format');
-    const qualitySlider = document.getElementById('quality');
-    const qVal = document.getElementById('qVal');
     const compressBtn = document.getElementById('compressBtn');
+    const resizeWidth = document.getElementById('resizeWidth');
+    const format = document.getElementById('format');
+    const quality = document.getElementById('quality');
+    const qLabel = document.getElementById('qLabel');
     const preview = document.getElementById('preview');
     const info = document.getElementById('info');
 
-    let originalImg = new Image();
-    let currentFilename = "image";
+    let imgDataUrl = null;
+    let imgName = 'image';
 
-    qualitySlider.addEventListener('input', () => {
-      qVal.textContent = `${Math.round(qualitySlider.value * 100)}%`;
+    quality.addEventListener('input', () => {
+      qLabel.textContent = `${Math.round(quality.value * 100)}%`;
     });
 
-    dropZone.addEventListener('click', () => input.click());
+    dropZone.addEventListener('click', () => fileInput.click());
 
-    dropZone.addEventListener('dragover', (e) => {
+    dropZone.addEventListener('dragover', e => {
       e.preventDefault();
       dropZone.classList.add('dragover');
     });
@@ -130,70 +153,74 @@
       dropZone.classList.remove('dragover');
     });
 
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', e => {
       e.preventDefault();
       dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files.length) {
-        handleImageFile(e.dataTransfer.files[0]);
+      if (e.dataTransfer.files[0]) {
+        handleFile(e.dataTransfer.files[0]);
       }
     });
 
-    input.addEventListener('change', () => {
-      if (input.files.length) {
-        handleImageFile(input.files[0]);
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        handleFile(e.target.files[0]);
       }
     });
 
-    document.addEventListener('paste', (e) => {
+    document.addEventListener('paste', e => {
       const items = e.clipboardData.items;
       for (const item of items) {
         if (item.type.startsWith('image/')) {
           const file = item.getAsFile();
-          if (file) handleImageFile(file);
+          if (file) handleFile(file);
         }
       }
     });
 
-    function handleImageFile(file) {
+    function handleFile(file) {
+      if (!file.type.startsWith('image/')) return alert('Please select a valid image.');
       const reader = new FileReader();
       reader.onload = e => {
-        originalImg.src = e.target.result;
-        currentFilename = file.name ? file.name.replace(/\.[^/.]+$/, "") : "clipboard";
+        imgDataUrl = e.target.result;
+        imgName = file.name.replace(/\.[^/.]+$/, '');
+        preview.src = imgDataUrl;
+        preview.style.display = 'block';
+        info.textContent = '';
       };
       reader.readAsDataURL(file);
     }
 
     compressBtn.addEventListener('click', () => {
-      if (!originalImg.src) return;
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      const targetWidth = parseInt(resizeInput.value);
-      const ratio = targetWidth / originalImg.naturalWidth;
-      const targetHeight = originalImg.naturalHeight * ratio;
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      ctx.drawImage(originalImg, 0, 0, targetWidth, targetHeight);
+      if (!imgDataUrl) return alert('No image loaded.');
 
-      const format = formatSelect.value;
-      const quality = parseFloat(qualitySlider.value);
+      const image = new Image();
+      image.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = parseInt(resizeWidth.value) / image.naturalWidth;
+        const width = parseInt(resizeWidth.value);
+        const height = image.naturalHeight * scale;
 
-      canvas.toBlob(blob => {
-        const url = URL.createObjectURL(blob);
-        preview.src = url;
-        preview.style.display = 'block';
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0, width, height);
 
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${currentFilename}-Comp.${format.split('/')[1]}`;
-        link.click();
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `${imgName}-Comp.${format.value.split('/')[1]}`;
+          link.click();
 
-        blob.arrayBuffer().then(buffer => {
-          const originalSize = atob(originalImg.src.split(',')[1] || '').length;
-          const compressedSize = buffer.byteLength;
-          const saved = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
-          info.textContent = `Saved ${(originalSize - compressedSize) / 1024 | 0} KB (${saved}%)`;
-        });
-      }, format, quality);
+          blob.arrayBuffer().then(buf => {
+            const originalSize = atob(imgDataUrl.split(',')[1] || '').length;
+            const compressedSize = buf.byteLength;
+            const saved = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
+            info.textContent = `Saved ${(originalSize - compressedSize) / 1024 | 0} KB (${saved}%)`;
+          });
+        }, format.value, parseFloat(quality.value));
+      };
+      image.src = imgDataUrl;
     });
   </script>
 </body>
