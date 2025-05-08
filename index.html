@@ -2,26 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipCompress - Image Compressor</title>
-  <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>ClipCompress</h1>
-  <input type="file" id="upload" accept="image/*" multiple>
-  <div id="dropzone">Drop or Paste Images Here</div>
-  <label for="quality">Quality</label>
-  <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8">
-  <button id="downloadAll">Download All</button>
-  <div id="output"></div>
-  <script src="app.js"></script>
+  <header>
+    <h1>ClipCompress</h1>
+    <p>Paste, drop, resize, and compress images directly in your browser.</p>
+  </header>
+
+  <section class="controls">
+    <div class="inputs">
+      <input type="file" id="upload" accept="image/*" multiple hidden>
+      <button id="uploadBtn">Upload Images</button>
+      <button id="downloadAll">Download All</button>
+    </div>
+
+    <div class="resize-options">
+      <label>Max Width: <input type="number" id="maxWidth" placeholder="e.g. 800"></label>
+      <label>Max Height: <input type="number" id="maxHeight" placeholder="e.g. 600"></label>
+      <label><input type="checkbox" id="lockRatio"> Lock Aspect Ratio</label>
+    </div>
+
+    <div class="quality-control">
+      <label for="quality">Quality:</label>
+      <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8">
+      <span id="qualityValue">0.8</span>
+    </div>
+  </section>
+
+  <section id="dropzone" class="dropzone">
+    <p>Drag & drop or paste images here</p>
+  </section>
+
+  <section id="output" class="output">
+    <!-- Compressed image previews will appear here -->
+  </section>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+  <script src="app.js"></script>
   <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js')
-      .then(() => console.log('Service Worker Registered'));
-  }
+    document.getElementById('uploadBtn').addEventListener('click', () => {
+      document.getElementById('upload').click();
+    });
+    document.getElementById('quality').addEventListener('input', e => {
+      document.getElementById('qualityValue').textContent = e.target.value;
+    });
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker Registered'));
+    }
   </script>
 </body>
 </html>
