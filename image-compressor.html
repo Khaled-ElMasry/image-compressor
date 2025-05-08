@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Offline Image Compressor</title>
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            padding: 30px;
+        }
+        input, select, button {
+            margin: 5px;
+        }
+        .img-preview {
+            margin: 15px 0;
+            max-width: 100%;
+        }
+        .card {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+        .info {
+            color: #ccc;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Local Image Compressor</h2>
+        <input type="file" id="imgInput" accept="image/*"><br>
+        <label>Resize Width: <input type="number" id="resizeWidth" value="1000"></label><br>
+        <label>Format:
+            <select id="format">
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/webp">WebP</option>
+            </select>
+        </label><br>
+        <label>Quality:
+            <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.6">
+            <span id="qVal">60%</span>
+        </label><br>
+        <button id="compressBtn">🗜️ Compress & Download</button>
+        <div class="info" id="info"></div>
+        <img id="preview" class="img-preview" style="display:none;">
+    </div>
+
+    <script>
+        const input = document.getElementById('imgInput');
+        const resizeInput = document.getElementById('resizeWidth');
+        const formatSelect = document.getElementById('format');
+        const qualitySlider = document.getElementById('quality');
+        const qVal = document.getElementById('qVal');
+        const compressBtn = document.getElementById('compressBtn');
+        const preview = document.getElementById('preview');
+        const info = document.getElementById('info');
+
+        let originalImg = new Image();
+
+        qualitySlider.addEventListener('input', () => {
+            qVal.textContent = `${Math.round(qualitySlider.value * 100)}%`;
+        });
+
+        input.addEventListener('change', () => {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                originalImg.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        compressBtn.addEventListener('click', () => {
+            if (!originalImg.src) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const targetWidth = parseInt(resizeInput.value);
+            const ratio = targetWidth / originalImg.naturalWidth;
+            const targetHeight = originalImg.naturalHeight * ratio;
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            ctx.drawImage(originalImg, 0, 0, targetWidth, targetHeight);
+
+            const format = formatSelect.value;
+            const quality = parseFloat(qualitySlider.value);
+            const dataUrl = canvas.toDataURL(format, quality);
+
+            const origSize = atob(originalImg.src.split(',')[1]).length;
+            const compSize = atob(dataUrl.split(',')[1]).length;
+            const saved = ((origSize - compSize) / origSize * 100).toFixed(1);
+
+            info.textContent = `Saved ${(origSize - compSize) / 1024 | 0} KB (${saved}%)`;
+
+            preview.src = dataUrl;
+            preview.style.display = 'block';
+
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `compressed.${format.split('/')[1]}`;
+            link.click();
+        });
+    </script>
+</body>
+</html>
