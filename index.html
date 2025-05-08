@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="K-Comp: A modern, offline-ready image compressor for web and mobile">
-  <title>K-Comp – Offline Image Compressor</title>
+  <meta name="description" content="K-Comp: Caesium-like image compressor in your browser, with paste and drag support">
+  <title>K-Comp – Caesium-Style Image Compressor</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
   <style>
     :root {
@@ -73,8 +73,8 @@
 <body>
   <div class="card">
     <h1>K-Comp</h1>
-    <p>Drag an image below or click to upload. Compresses securely, offline, instantly.</p>
-    <div class="drop-zone" id="dropZone">Drop images here or click to upload</div>
+    <p>Drop, upload, or paste an image below. Compress securely, offline, instantly.</p>
+    <div class="drop-zone" id="dropZone">Drop images here, paste from clipboard, or click to upload</div>
     <input type="file" id="imgInput" accept="image/*" style="display:none;">
     <div>
       <label>Resize Width:
@@ -144,11 +144,21 @@
       }
     });
 
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData.items;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) handleImageFile(file);
+        }
+      }
+    });
+
     function handleImageFile(file) {
       const reader = new FileReader();
       reader.onload = e => {
         originalImg.src = e.target.result;
-        currentFilename = file.name.replace(/\.[^/.]+$/, "");
+        currentFilename = file.name ? file.name.replace(/\.[^/.]+$/, "") : "clipboard";
       };
       reader.readAsDataURL(file);
     }
