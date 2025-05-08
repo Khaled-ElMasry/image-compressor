@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Offline Image Compressor</title>
+    <title>Khaled's ImageCompressor</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
     <style>
         body {
             background: #1e1e1e;
@@ -13,6 +14,7 @@
             align-items: center;
             justify-content: start;
             padding: 30px;
+            margin: 0;
         }
         input, select, button {
             margin: 5px;
@@ -27,17 +29,31 @@
             border-radius: 10px;
             width: 100%;
             max-width: 600px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
         .info {
             color: #ccc;
             font-size: 0.9em;
         }
+        .drop-zone {
+            border: 2px dashed #555;
+            padding: 20px;
+            text-align: center;
+            margin-top: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .drop-zone.dragover {
+            background: #333;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Local Image Compressor</h2>
-        <input type="file" id="imgInput" accept="image/*"><br>
+        <h2>Khaled's ImageCompressor</h2>
+        <div class="drop-zone" id="dropZone">Drop images here or click to upload</div>
+        <input type="file" id="imgInput" accept="image/*" style="display:none;"><br>
         <label>Resize Width: <input type="number" id="resizeWidth" value="1000"></label><br>
         <label>Format:
             <select id="format">
@@ -57,6 +73,7 @@
 
     <script>
         const input = document.getElementById('imgInput');
+        const dropZone = document.getElementById('dropZone');
         const resizeInput = document.getElementById('resizeWidth');
         const formatSelect = document.getElementById('format');
         const qualitySlider = document.getElementById('quality');
@@ -71,15 +88,38 @@
             qVal.textContent = `${Math.round(qualitySlider.value * 100)}%`;
         });
 
+        dropZone.addEventListener('click', () => input.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+
         input.addEventListener('change', () => {
-            const file = input.files[0];
-            if (!file) return;
+            if (input.files.length) {
+                handleImageFile(input.files[0]);
+            }
+        });
+
+        function handleImageFile(file) {
             const reader = new FileReader();
             reader.onload = e => {
                 originalImg.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        });
+        }
 
         compressBtn.addEventListener('click', () => {
             if (!originalImg.src) return;
