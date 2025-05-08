@@ -2,226 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>K-ImageComp - Smart Image Compressor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K-Comp Pro – Professional Image Compressor</title>
-  <meta name="description" content="A high-performance, offline-capable image compressor inspired by Caesium.">
-  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1829/1829586.png">
   <style>
-    :root {
-      --bg-color: #121212;
-      --card-bg: #1e1e1e;
-      --accent: #4caf50;
-      --text-color: #ffffff;
-      --subtle: #aaaaaa;
-      --radius: 8px;
-    }
-
-    body {
-      margin: 0;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: start;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      background: var(--card-bg);
+    body { font-family: sans-serif; margin: 2em; background: #f0f2f5; color: #333; }
+    h1 { text-align: center; }
+    #drop-area {
+      border: 2px dashed #bbb;
+      border-radius: 10px;
       padding: 30px;
-      border-radius: var(--radius);
-      max-width: 720px;
-      width: 100%;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    h1 {
-      margin-top: 0;
-      font-size: 1.8rem;
-    }
-
-    .controls label {
-      display: block;
-      margin: 10px 0 4px;
-      color: var(--subtle);
-    }
-
-    input[type="number"], select, input[type="range"] {
-      width: 100%;
-      padding: 8px;
-      border-radius: var(--radius);
-      border: none;
-      margin-bottom: 10px;
-    }
-
-    .drop-zone {
-      border: 2px dashed #555;
-      border-radius: var(--radius);
-      padding: 30px;
+      background: white;
       text-align: center;
-      color: var(--subtle);
       margin-bottom: 20px;
-      cursor: pointer;
     }
-
-    .drop-zone.dragover {
-      background-color: #222;
-    }
-
-    .preview {
-      margin-top: 20px;
-      max-width: 100%;
-      display: none;
-    }
-
-    .info {
-      font-size: 0.9em;
-      color: var(--subtle);
-      margin-top: 10px;
-    }
-
-    .btn {
-      background-color: var(--accent);
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      font-size: 1rem;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    .btn:hover {
-      background-color: #66bb6a;
-    }
+    .controls { margin-top: 20px; }
+    .images-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+    .image-preview { border: 1px solid #ccc; padding: 10px; background: white; }
+    canvas { display: none; }
+    .btn { margin-top: 10px; padding: 10px 20px; cursor: pointer; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <main class="container" role="main">
-    <h1>K-Comp Pro</h1>
-    <p>Paste (Ctrl+V), drop, or upload images to compress locally. No upload, no tracking.</p>
-    <div class="drop-zone" id="dropZone">Click or drop image here</div>
-    <input type="file" id="fileInput" accept="image/*" style="display:none;">
-    <div class="controls">
-      <label for="resizeWidth">Resize Width (px):</label>
-      <input type="number" id="resizeWidth" min="50" max="8000" value="1000">
 
-      <label for="format">Output Format:</label>
-      <select id="format">
-        <option value="image/jpeg">JPEG</option>
-        <option value="image/png">PNG</option>
-        <option value="image/webp">WebP</option>
-      </select>
+<h1>📷 K-ImageComp</h1>
 
-      <label for="quality">Compression Quality:</label>
-      <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.7">
-      <span id="qLabel">70%</span>
-    </div>
-    <button class="btn" id="compressBtn">Compress & Download</button>
-    <div class="info" id="info"></div>
-    <img class="preview" id="preview" alt="Compressed Preview">
-  </main>
+<div id="drop-area">
+  <p>📥 Drag & Drop images here or <input type="file" id="fileInput" multiple></p>
+  <p>📋 Or paste an image from clipboard (Ctrl+V)</p>
+  <div class="controls">
+    <label>Quality: <span id="qualityVal">0.7</span></label>
+    <input type="range" id="qualityRange" min="0.1" max="1" step="0.1" value="0.7">
+    <button class="btn" onclick="downloadAll()">Download All</button>
+    <button class="btn" onclick="clearAll()">Clear All</button>
+  </div>
+</div>
 
-  <script>
-    const fileInput = document.getElementById('fileInput');
-    const dropZone = document.getElementById('dropZone');
-    const compressBtn = document.getElementById('compressBtn');
-    const resizeWidth = document.getElementById('resizeWidth');
-    const format = document.getElementById('format');
-    const quality = document.getElementById('quality');
-    const qLabel = document.getElementById('qLabel');
-    const preview = document.getElementById('preview');
-    const info = document.getElementById('info');
+<div class="images-container" id="preview"></div>
 
-    let imgDataUrl = null;
-    let imgName = 'image';
+<script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+<script>
+  const dropArea = document.getElementById('drop-area');
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+  const qualityRange = document.getElementById('qualityRange');
+  const qualityVal = document.getElementById('qualityVal');
+  let compressedImages = [];
 
-    quality.addEventListener('input', () => {
-      qLabel.textContent = `${Math.round(quality.value * 100)}%`;
-    });
+  qualityRange.oninput = () => qualityVal.textContent = qualityRange.value;
 
-    dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+  dropArea.addEventListener('dragover', e => e.preventDefault());
+  dropArea.addEventListener('drop', e => {
+    e.preventDefault();
+    handleFiles(e.dataTransfer.files);
+  });
 
-    dropZone.addEventListener('dragover', e => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('dragover');
-    });
-
-    dropZone.addEventListener('drop', e => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files[0]) {
-        handleFile(e.dataTransfer.files[0]);
+  document.addEventListener('paste', async (e) => {
+    const items = e.clipboardData.items;
+    for (let item of items) {
+      if (item.type.includes("image")) {
+        const file = item.getAsFile();
+        handleFiles([file]);
       }
-    });
-
-    fileInput.addEventListener('change', e => {
-      if (e.target.files[0]) {
-        handleFile(e.target.files[0]);
-      }
-    });
-
-    document.addEventListener('paste', e => {
-      const items = e.clipboardData.items;
-      for (const item of items) {
-        if (item.type.startsWith('image/')) {
-          const file = item.getAsFile();
-          if (file) handleFile(file);
-        }
-      }
-    });
-
-    function handleFile(file) {
-      if (!file.type.startsWith('image/')) return alert('Please select a valid image.');
-      const reader = new FileReader();
-      reader.onload = e => {
-        imgDataUrl = e.target.result;
-        imgName = file.name.replace(/\.[^/.]+$/, '');
-        preview.src = imgDataUrl;
-        preview.style.display = 'block';
-        info.textContent = '';
-      };
-      reader.readAsDataURL(file);
     }
+  });
 
-    compressBtn.addEventListener('click', () => {
-      if (!imgDataUrl) return alert('No image loaded.');
+  async function handleFiles(files) {
+    for (let file of files) {
+      if (!file.type.startsWith("image/")) continue;
 
-      const image = new Image();
-      image.onload = () => {
-        const canvas = document.createElement('canvas');
-        const scale = parseInt(resizeWidth.value) / image.naturalWidth;
-        const width = parseInt(resizeWidth.value);
-        const height = image.naturalHeight * scale;
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0, width, height);
-
-        canvas.toBlob(blob => {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `${imgName}-Comp.${format.value.split('/')[1]}`;
-          link.click();
-
-          blob.arrayBuffer().then(buf => {
-            const originalSize = atob(imgDataUrl.split(',')[1] || '').length;
-            const compressedSize = buf.byteLength;
-            const saved = ((originalSize - compressedSize) / originalSize * 100).toFixed(1);
-            info.textContent = `Saved ${(originalSize - compressedSize) / 1024 | 0} KB (${saved}%)`;
-          });
-        }, format.value, parseFloat(quality.value));
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+        initialQuality: parseFloat(qualityRange.value)
       };
-      image.src = imgDataUrl;
+
+      try {
+        const compressedFile = await imageCompression(file, options);
+        compressedImages.push({ file: compressedFile, name: file.name });
+
+        const originalSize = (file.size / 1024).toFixed(1);
+        const newSize = (compressedFile.size / 1024).toFixed(1);
+
+        const imgURL = URL.createObjectURL(compressedFile);
+        const div = document.createElement("div");
+        div.className = "image-preview";
+        div.innerHTML = `
+          <p><strong>${file.name}</strong> ➜ <em>${file.name.replace(/\.(\w+)$/, '-Comp.$1')}</em></p>
+          <p>${originalSize} KB ➜ ${newSize} KB</p>
+          <img src="${imgURL}" width="200">
+          <br><a href="${imgURL}" download="${file.name.replace(/\.(\w+)$/, '-Comp.$1')}">Download</a>
+        `;
+        preview.appendChild(div);
+      } catch (err) {
+        console.error("Compression error:", err);
+      }
+    }
+  }
+
+  function downloadAll() {
+    compressedImages.forEach(({ file, name }) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(file);
+      a.download = name.replace(/\.(\w+)$/, '-Comp.$1');
+      a.click();
     });
-  </script>
+  }
+
+  function clearAll() {
+    preview.innerHTML = "";
+    compressedImages = [];
+  }
+</script>
+
 </body>
 </html>
